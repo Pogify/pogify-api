@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/joho/godotenv/autoload"
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
@@ -16,18 +14,39 @@ type sessionJwtClaims struct {
 	jwt.StandardClaims
 }
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
 // StartSession ...
 func StartSession(c *gin.Context) {
-
 	sessionCode, err := generateSessionCode()
 	if err != nil {
-		fmt.Println("err generating Sessioncode")
+		c.AbortWithError(500, err)
 		return
 	}
 
 	refreshToken, err := gonanoid.ID(64)
+	if err != nil {
+		c.AbortWithError(500, err)
+		return
+	}
+
+	for true {
+		val, err := NewSession(sessionCode, refreshToken)
+
+		if err != nil {
+			fmt.Print(err)
+			c.AbortWithError(500, err)
+			return
+		}
+
+		if val == 1 {
+			break
+		} else {
+			sessionCode, err = generateSessionCode()
+			if err != nil {
+				c.AbortWithError(500, err)
+				return
+			}
+		}
+	}
 
 	claims := sessionJwtClaims{
 		sessionCode,
@@ -40,15 +59,15 @@ func StartSession(c *gin.Context) {
 
 	tokenSign, err := token.SignedString(jwtSecret)
 
-	fmt.Println(claims)
-
 	if err != nil {
-		fmt.Println(err)
+		c.AbortWithError(500, err)
+		return
 	}
 
 	c.JSON(200, gin.H{
-		"message":      sessionCode,
+		"session":      sessionCode,
 		"refreshToken": refreshToken,
+		"expiresIn":    60 * 60,
 		"token":        tokenSign,
 	})
 }
