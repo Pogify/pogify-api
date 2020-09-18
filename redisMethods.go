@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/go-redis/redis/v8"
@@ -33,7 +33,7 @@ func NewSession(sessionToken string, refreshToken string) (int64, error) {
 
 	val, err := rdb.Eval(ctx, newSessionScript, key, refreshToken, os.Getenv("REFRESH_TOKEN_TTL")).Result()
 	if err != nil {
-		fmt.Print(err)
+		log.Print(err)
 	}
 
 	return val.(int64), err

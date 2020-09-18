@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,7 +24,6 @@ func postUpdate(c *gin.Context) {
 	if token.Valid {
 		sessionID := token.Claims.(jwt.MapClaims)["session"].(string)
 		data, _ := c.GetRawData()
-		fmt.Println(string(data))
 		pub, err := http.NewRequest("POST", pubsubURL, bytes.NewReader(data))
 		pub.Header.Add("authorization", pubsubSecret)
 		pubQ := pub.URL.Query()
@@ -60,7 +58,6 @@ func postUpdate(c *gin.Context) {
 		c.Data(200, "application/json", body)
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors == jwt.ValidationErrorExpired {
-			fmt.Print(ve.Errors, (jwt.ValidationErrorExpired))
 			c.String(400, "sessionToken expired")
 		} else {
 			c.String(400, "invalid sessionToken")

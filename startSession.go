@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -33,7 +33,7 @@ func StartSession(c *gin.Context) {
 		val, err := NewSession(sessionCode, refreshToken)
 
 		if err != nil {
-			fmt.Print(err)
+			log.Print(err)
 			c.AbortWithError(500, err)
 			return
 		}
