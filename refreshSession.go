@@ -7,7 +7,7 @@ import (
 )
 
 // RefreshSession ...
-func refreshSession(c *gin.Context) {
+func (s *server) refreshSession(c *gin.Context) {
 	sessionJWT := c.Query("sessionToken")
 	if sessionJWT == "" {
 		c.String(400, "missing query: sessionToken")
@@ -34,7 +34,7 @@ func refreshSession(c *gin.Context) {
 
 	newRefreshToken, err := gonanoid.ID(64)
 
-	val, err := verifyAndSetNewSession(sessionID, refreshToken, newRefreshToken)
+	val, err := s.redis.verifyAndSetNewSession(sessionID, refreshToken, newRefreshToken)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return

@@ -16,7 +16,7 @@ type sessionJwtClaims struct {
 }
 
 // StartSession ...
-func StartSession(c *gin.Context) {
+func (s *server) startSession(c *gin.Context) {
 	sessionCode, err := generateSessionCode()
 	if err != nil {
 		c.AbortWithError(500, err)
@@ -30,7 +30,7 @@ func StartSession(c *gin.Context) {
 	}
 
 	for true {
-		val, err := NewSession(sessionCode, refreshToken)
+		val, err := s.redis.newSession(sessionCode, refreshToken)
 
 		if err != nil {
 			log.Print(err)

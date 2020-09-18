@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -10,11 +11,10 @@ import (
 
 var ctx = context.Background()
 
-var rdb = redis.NewClient(&redis.Options{
-	Addr:     os.Getenv("REDIS_HOST"),
-	Password: os.Getenv("REDIS_PASSWORD"),
-	DB:       0,
-})
+type r struct {
+	conn            *redis.Client
+	refreshTokenTTL string
+}
 
 var newSessionScript = `local c = redis.call("ttl", KEYS[1])
 												if (c < 0) then 
@@ -24,14 +24,13 @@ var newSessionScript = `local c = redis.call("ttl", KEYS[1])
 													end
 												return 0`
 
-// NewSession ...
-func NewSession(sessionToken string, refreshToken string) (int64, error) {
+func (r *r) newSession(sessionToken string, refreshToken string) (int64, error) {
 
 	key := []string{
 		"session:" + sessionToken,
 	}
 
-	val, err := rdb.Eval(ctx, newSessionScript, key, refreshToken, os.Getenv("REFRESH_TOKEN_TTL")).Result()
+	val, err := r.conn.Eval(ctx, newSessionScript, key, refreshToken, r.refreshTokenTTL).Result()
 	if err != nil {
 		log.Print(err)
 	}
@@ -52,7 +51,25 @@ var verifyAndSetScript = `
   return 0 
   `
 
-func verifyAndSetNewSession(sessionID string, token string, newToken string) (int64, error) {
-	val, err := rdb.Eval(ctx, verifyAndSetScript, []string{"session:" + sessionID}, token, newToken, os.Getenv("REFRESH_TOKEN_TTL")).Result()
+func (r *r) verifyAndSetNewSession(sessionID string, token string, newToken string) (int64, error) {
+	val, err := r.conn.Eval(ctx, verifyAndSetScript, []string{"session:" + sessionID}, token, newToken, r.refreshTokenTTL).Result()
 	return val.(int64), err
+}
+
+var requestLimitScript = `
+	local c = redis.call('incr',KEYS[1]) 
+	if (c == 1) then 
+		redis.call('expire', KEYS[1], ARGV[1]) 
+	end 	
+	return {c, redis.call('ttl', KEYS[1])}`
+
+func (r *r) rateLimitRequest(sessionID string, id string) (int64, error) {
+	key := fmt.Sprintf("requestLimit:%v:%v", sessionID, id)
+	// TODO: this should be host configured
+	val, err := r.conn.Eval(ctx, requestLimitScript, []string{key}, os.Getenv("REQUEST_INTERVAL")).Result()
+	return val.(int64), err
+}
+
+func (r *r) reverseRateLimit(sessionID string, id string) (int64, error) {
+	return r.conn.Decr(ctx, fmt.Sprintf("requestLimit:%v:%v", sessionID, id)).Result()
 }

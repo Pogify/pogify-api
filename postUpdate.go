@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func postUpdate(c *gin.Context) {
+func (s *server) postUpdate(c *gin.Context) {
 	sessionToken := c.GetHeader("X-Session-Token")
 	if sessionToken == "" {
 		c.String(400, "missing X-Session-Token header")
@@ -24,21 +23,17 @@ func postUpdate(c *gin.Context) {
 	if token.Valid {
 		sessionID := token.Claims.(jwt.MapClaims)["session"].(string)
 		data, _ := c.GetRawData()
-		pub, err := http.NewRequest("POST", pubsubURL, bytes.NewReader(data))
-		pub.Header.Add("authorization", pubsubSecret)
-		pubQ := pub.URL.Query()
-		pubQ.Add("id", sessionID)
-		pub.URL.RawQuery = pubQ.Encode()
+
+		ch := make(chan *http.Response)
+		errCh := make(chan error)
+
+		go s.pubsub.pub(ch, errCh, sessionID, data)
+
+		res := <-ch
+		err := <-errCh
 
 		if err != nil {
 			c.AbortWithError(500, err)
-			return
-		}
-
-		res, err := http.DefaultClient.Do(pub)
-		if err != nil {
-			c.AbortWithError(500, err)
-			return
 		}
 
 		if res.StatusCode > 399 {
@@ -66,11 +61,4 @@ func postUpdate(c *gin.Context) {
 		c.AbortWithError(403, err)
 	}
 
-}
-
-func postUpdateOptions(c *gin.Context) {
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Header("Access-Control-Allow-Methods", "POST")
-	c.Header("Access-Control-Allow-Headers", "X-Session-Token")
-	c.Header("Access-Control-Max-Age", "7200")
 }
