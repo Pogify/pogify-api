@@ -52,7 +52,7 @@ var verifyAndSetScript = `
   return 0 
   `
 
-func VerifyAndSetNewSession(sessionId string, token string, newToken string) (int64, error) {
-	val, err := rdb.Eval(ctx, verifyAndSetScript, []string{"session:" + sessionId}, token, newToken, os.Getenv("REFRESH_TOKEN_TTL")).Result()
+func verifyAndSetNewSession(sessionID string, token string, newToken string) (int64, error) {
+	val, err := rdb.Eval(ctx, verifyAndSetScript, []string{"session:" + sessionID}, token, newToken, os.Getenv("REFRESH_TOKEN_TTL")).Result()
 	return val.(int64), err
 }

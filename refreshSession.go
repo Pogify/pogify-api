@@ -34,7 +34,7 @@ func refreshSession(c *gin.Context) {
 
 	newRefreshToken, err := gonanoid.ID(64)
 
-	val, err := VerifyAndSetNewSession(sessionID, refreshToken, newRefreshToken)
+	val, err := verifyAndSetNewSession(sessionID, refreshToken, newRefreshToken)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return
