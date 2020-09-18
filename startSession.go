@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 
@@ -51,7 +52,7 @@ func StartSession(c *gin.Context) {
 	claims := sessionJwtClaims{
 		sessionCode,
 		jwt.StandardClaims{
-			ExpiresAt: 60 * 60,
+			ExpiresAt: time.Now().Unix() + 60*60,
 		},
 	}
 
