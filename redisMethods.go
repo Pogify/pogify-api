@@ -51,7 +51,7 @@ var verifyAndSetScript = `
   return 0 
   `
 
-func (r *r) verifyAndSetNewSession(sessionID string, token string, newToken string) (int64, error) {
+func (r *r) verifyAndSetNewRefreshToken(sessionID string, token string, newToken string) (int64, error) {
 	val, err := r.conn.Eval(ctx, verifyAndSetScript, []string{"session:" + sessionID}, token, newToken, r.refreshTokenTTL).Result()
 	return val.(int64), err
 }
@@ -73,3 +73,13 @@ func (r *r) rateLimitRequest(sessionID string, id string) (int64, error) {
 func (r *r) reverseRateLimit(sessionID string, id string) (int64, error) {
 	return r.conn.Decr(ctx, fmt.Sprintf("requestLimit:%v:%v", sessionID, id)).Result()
 }
+
+// type SessionConfig struct {
+// 	RequestInterval int64
+// }
+
+// func (r *r) setSessionConfig(sessionID string, config SessionConfig) (string, error) {
+// 	parsedStr, _ := strconv.ParseInt(r.refreshTokenTTL, 10, 64)
+
+// 	return r.conn.Set(ctx, fmt.Sprintf("session:%v:config", sessionID), config, time.Duration(parsedStr)).Result()
+// }
