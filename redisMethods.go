@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -103,4 +104,39 @@ func (r *r) setSessionConfig(sessionID string, config config) error {
 	pipe.Expire(ctx, key, time.Duration(parsedStr)*time.Second)
 	_, err := pipe.Exec(ctx)
 	return err
+}
+
+func (r *r) getSessionConfig(sessionID string) (*config, error) {
+	key := fmt.Sprintf("session:%v:config", sessionID)
+
+	conf, err := r.conn.HGetAll(ctx, key).Result()
+
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("%+v", conf)
+
+	c := cast(&conf)
+
+	return c, nil
+
+}
+
+func cast(conf *map[string]string) *config {
+	var c config
+	s := reflect.ValueOf(&c).Elem()
+	typeOfT := s.Type()
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+
+		switch f.Type().String() {
+		case "int":
+			i, _ := strconv.ParseInt((*conf)[typeOfT.Field(i).Name], 10, 64)
+			f.SetInt(i)
+		case "string":
+			f.SetString((*conf)[typeOfT.Field(i).Name])
+		}
+	}
+
+	return &c
 }

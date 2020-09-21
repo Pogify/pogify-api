@@ -166,6 +166,7 @@ func startServer() *gin.Engine {
 	rr.OPTIONS("/makeRequest", s.cors)
 	rr.POST("/setConfig", s.setConfig)
 	rr.OPTIONS("/setConfig", s.cors)
+	rr.GET("/getConfig", s.getConfig)
 
 	return rr
 }
