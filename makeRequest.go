@@ -40,8 +40,18 @@ func (s *server) makeRequest(c *gin.Context) {
 	switch r.Provider {
 	case "twitch":
 		// validate token with twitch
+		// s.auth.getTwitchKeys()
+		token, err := s.auth.ValidateTwitchToken(r.Token)
+		if err != nil {
+			c.Error(err)
+			c.String(401, fmt.Sprint(err))
+			return
+		}
+		id = token.Claims.(jwt.MapClaims)["sub"].(string)
+		return
 	case "google":
 		// validate token with google
+		s.auth.getGooglePEM()
 		token, err := s.auth.ValidateGoogleToken(r.Token)
 		if err != nil {
 			c.Error(err)

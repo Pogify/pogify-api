@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rsa"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/lestrrat/go-jwx/jwk"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
@@ -95,6 +97,7 @@ func (p *pubsub) pub(ch chan<- *http.Response, errCh chan<- error, channel strin
 type auth struct {
 	googlePEM       map[string]*rsa.PublicKey
 	googlePEMExpiry time.Time
+	twitchKeys      map[string]*rsa.PublicKey
 }
 
 func (a *auth) getGooglePEM() map[string]*rsa.PublicKey {
@@ -120,9 +123,44 @@ func (a *auth) getGooglePEM() map[string]*rsa.PublicKey {
 	return rb
 }
 
+func (a *auth) getTwitchKeys() map[string]*rsa.PublicKey {
+	if len(a.twitchKeys) > 0 {
+		return a.twitchKeys
+	}
+	keySet, _ := jwk.FetchHTTP("https://id.twitch.tv/oauth2/keys")
+
+	rb := make(map[string]*rsa.PublicKey)
+
+	for _, v := range keySet.Keys {
+		n, _ := v.Materialize()
+
+		rb[v.KeyID()] = n.(*rsa.PublicKey)
+	}
+
+	a.twitchKeys = rb
+	return rb
+}
+
 func (a *auth) ValidateGoogleToken(t string) (*jwt.Token, error) {
 	return jwt.Parse(t, func(t *jwt.Token) (interface{}, error) {
-		return a.getGooglePEM()[t.Header["kid"].(string)], nil
+		kid := a.getGooglePEM()[t.Header["kid"].(string)]
+		if kid != nil {
+			return a.getGooglePEM()[t.Header["kid"].(string)], nil
+		} else {
+			return nil, errors.New("token: kid does not exist")
+		}
+	})
+}
+
+func (a *auth) ValidateTwitchToken(t string) (*jwt.Token, error) {
+	return jwt.Parse(t, func(t *jwt.Token) (interface{}, error) {
+		kid := a.getTwitchKeys()[t.Header["kid"].(string)]
+		if kid != nil {
+			return a.getTwitchKeys()[t.Header["kid"].(string)], nil
+		} else {
+			return nil, errors.New("token: kid does not exist")
+		}
+
 	})
 }
 
