@@ -2,11 +2,16 @@ package main
 
 import (
 	"bytes"
+	"crypto/rsa"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/joho/godotenv/autoload"
@@ -38,13 +43,14 @@ func init() {
 
 func main() {
 	s := startServer()
-	s.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	s.Run(":8081") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
 type server struct {
 	redis  *r
 	pubsub *pubsub
 	jwt    *j
+	auth   *auth
 }
 
 func (s *server) cors(c *gin.Context) {
@@ -55,7 +61,7 @@ func (s *server) cors(c *gin.Context) {
 }
 
 type j struct {
-	secret string
+	secret []byte
 }
 
 type pubsub struct {
@@ -64,7 +70,7 @@ type pubsub struct {
 }
 
 func (p *pubsub) pub(ch chan<- *http.Response, errCh chan<- error, channel string, data []byte) {
-	pub, err := http.NewRequest("POST", p.url, bytes.NewReader(data))
+	pub, err := http.NewRequest("POST", p.url+"/pub", bytes.NewReader(data))
 	pub.Header.Add("authorization", p.secret)
 	pubQ := pub.URL.Query()
 	pubQ.Add("id", channel)
@@ -78,14 +84,46 @@ func (p *pubsub) pub(ch chan<- *http.Response, errCh chan<- error, channel strin
 
 	res, err := http.DefaultClient.Do(pub)
 	if err != nil {
-		ch <- nil
 		errCh <- err
 		return
 	}
 
 	ch <- res
-	errCh <- nil
 
+}
+
+type auth struct {
+	googlePEM       map[string]*rsa.PublicKey
+	googlePEMExpiry time.Time
+}
+
+func (a *auth) getGooglePEM() map[string]*rsa.PublicKey {
+	if len(a.googlePEM) > 0 && a.googlePEMExpiry.After(time.Now()) {
+		return a.googlePEM
+	}
+	res, _ := http.Get("https://www.googleapis.com/oauth2/v1/certs")
+	body, _ := ioutil.ReadAll(res.Body)
+
+	exp, _ := time.Parse(time.RFC1123, res.Header["Expires"][0])
+	a.googlePEMExpiry = exp
+
+	var r map[string]string
+	json.Unmarshal(body, &r)
+
+	rb := make(map[string]*rsa.PublicKey)
+
+	for k, v := range r {
+		pem, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(v))
+		rb[k] = pem
+	}
+	a.googlePEM = rb
+	return rb
+}
+
+func (a *auth) ValidateGoogleToken(t string) (*jwt.Token, error) {
+	return jwt.Parse(t, func(t *jwt.Token) (interface{}, error) {
+		return a.getGooglePEM()[t.Header["kid"].(string)], nil
+	})
 }
 
 func startServer() *gin.Engine {
@@ -112,8 +150,12 @@ func startServer() *gin.Engine {
 	s.pubsub = p
 
 	var j = new(j)
-	j.secret = os.Getenv("JWT_SECRET")
+	j.secret = []byte(os.Getenv("JWT_SECRET"))
 	s.jwt = j
+
+	var a = new(auth)
+	a.getGooglePEM()
+	s.auth = a
 
 	rr := gin.Default()
 	rr.POST("/startSession", s.startSession)
@@ -122,6 +164,8 @@ func startServer() *gin.Engine {
 	rr.POST("/postUpdate", s.postUpdate)
 	rr.POST("/makeRequest", s.makeRequest)
 	rr.OPTIONS("/makeRequest", s.cors)
+	rr.POST("/setConfig", s.setConfig)
+	rr.OPTIONS("/setConfig", s.cors)
 
 	return rr
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,11 +30,12 @@ func (s *server) postUpdate(c *gin.Context) {
 
 		go s.pubsub.pub(ch, errCh, sessionID, data)
 
-		res := <-ch
-		err := <-errCh
-
-		if err != nil {
+		var res *http.Response
+		select {
+		case res = <-ch:
+		case err := <-errCh:
 			c.AbortWithError(500, err)
+			return
 		}
 
 		if res.StatusCode > 399 {
@@ -52,11 +54,8 @@ func (s *server) postUpdate(c *gin.Context) {
 
 		c.Data(200, "application/json", body)
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
-		if ve.Errors == jwt.ValidationErrorExpired {
-			c.String(400, "sessionToken expired")
-		} else {
-			c.String(400, "invalid sessionToken")
-		}
+		c.Error(ve)
+		c.String(400, fmt.Sprint(ve))
 	} else {
 		c.AbortWithError(403, err)
 	}

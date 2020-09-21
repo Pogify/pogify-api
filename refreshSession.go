@@ -42,7 +42,7 @@ func (s *server) refreshSession(c *gin.Context) {
 
 	switch val {
 	case -1:
-		c.String(400, "invalid sessionToken")
+		c.String(400, "refresh token expired")
 	case 0:
 		c.String(400, "invalid refreshToken")
 	case 1:
