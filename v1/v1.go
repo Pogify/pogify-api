@@ -209,5 +209,5 @@ func ServerV1(rr *gin.RouterGroup) {
 	rr.POST("/setConfig", s.setConfig)
 	rr.OPTIONS("/setConfig", s.cors)
 	rr.GET("/getConfig", s.getConfig)
-
+	rr.GET("/twitchauth", s.twitchAuth)
 }
