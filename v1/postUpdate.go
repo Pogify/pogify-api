@@ -18,7 +18,7 @@ func (s *server) postUpdate(c *gin.Context) {
 	}
 
 	token, err := jwt.Parse(sessionToken, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return s.jwt.secret, nil
 	})
 
 	if token.Valid {

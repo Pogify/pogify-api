@@ -58,7 +58,7 @@ func (s *server) startSession(c *gin.Context) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenSign, err := token.SignedString(jwtSecret)
+	tokenSign, err := token.SignedString(s.jwt.secret)
 
 	if err != nil {
 		c.AbortWithError(500, err)

@@ -20,7 +20,7 @@ func (s *server) refreshSession(c *gin.Context) {
 	}
 
 	token, err := jwt.Parse(sessionJWT, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return s.jwt.secret, nil
 	})
 
 	if ve, ok := err.(*jwt.ValidationError); ok {
@@ -55,7 +55,7 @@ func (s *server) refreshSession(c *gin.Context) {
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-		tokenSign, err := token.SignedString(jwtSecret)
+		tokenSign, err := token.SignedString(s.jwt.secret)
 		if err != nil {
 			c.AbortWithError(500, err)
 			return

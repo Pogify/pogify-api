@@ -19,8 +19,6 @@ import (
 	"github.com/lestrrat/go-jwx/jwk"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
 func init() {
 	if os.Getenv("JWT_SECRET") == "" {
 		log.Println("JWT_SECRET missing in .env. Server will use empty string as secret")
