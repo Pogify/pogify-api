@@ -1,4 +1,4 @@
-package main
+package v1
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 )
 
 type config struct {
-	RequestInterval int `json:"requestInterval" binding:"required"`
+	RequestInterval int `json:"requestInterval"`
 }
 
 func (s *server) setConfig(c *gin.Context) {

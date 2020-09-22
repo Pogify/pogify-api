@@ -1,4 +1,4 @@
-package main
+package v1
 
 import (
 	"context"
@@ -50,7 +50,7 @@ var verifyAndSetScript = `
   if (t == ARGV[1]) then
     redis.call("set", KEYS[1], ARGV[2])
 		redis.call("expire", KEYS[1], ARGV[3])
-		local c = redis.call()
+		redis.call("expire", KEYS[1]..":config", ARGV[3])
     return 1
   end
   return 0 
@@ -63,12 +63,12 @@ func (r *r) verifyAndSetNewRefreshToken(sessionID string, token string, newToken
 
 var requestLimitScript = `
 	local c = redis.call('incr',KEYS[1]) 
-	local r = redis.call('hget', KEYS[1]..":config", "RefreshInterval")
-	if (c == 1) then 
-		if (r == 0) then 
-			redis.call('expire', KEYS[1], r) 
-		else 
+	local r = redis.call('hget', "session:" .. ARGV[1] .. ":config", "RequestInterval")
+	if (c <= 1) then 
+		if (r == false) then 
 			redis.call('expire', KEYS[1], 60)
+		else 
+			redis.call('expire', KEYS[1], r) 
 		end
 	end 	
 	return {c, redis.call('ttl', KEYS[1])}`
@@ -78,9 +78,11 @@ func (r *r) rateLimitRequest(sessionID string, id string) ([]int64, error) {
 	hash.Write([]byte(id))
 	bs := hash.Sum(nil)
 	key := fmt.Sprintf("requestLimit:%v:%x", sessionID, bs)
-	val, err := r.conn.Eval(ctx, requestLimitScript, []string{key}).Result()
-
+	log.Print(key)
+	val, err := r.conn.Eval(ctx, requestLimitScript, []string{key}, sessionID).Result()
+	log.Print(err)
 	valS := make([]int64, 0, 2)
+	log.Print(val)
 	for _, v := range val.([]interface{}) {
 		valS = append(valS, v.(int64))
 	}
@@ -113,6 +115,10 @@ func (r *r) getSessionConfig(sessionID string) (*config, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if len(conf) == 0 {
+		return nil, fmt.Errorf("No config for %s", sessionID)
 	}
 	fmt.Printf("%+v", conf)
 

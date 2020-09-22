@@ -1,4 +1,4 @@
-package main
+package v1
 
 import (
 	"fmt"
@@ -48,7 +48,6 @@ func (s *server) makeRequest(c *gin.Context) {
 			return
 		}
 		id = token.Claims.(jwt.MapClaims)["sub"].(string)
-		return
 	case "google":
 		// validate token with google
 		s.auth.getGooglePEM()

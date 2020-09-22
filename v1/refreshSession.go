@@ -1,4 +1,4 @@
-package main
+package v1
 
 import (
 	"github.com/dgrijalva/jwt-go"
