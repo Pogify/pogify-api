@@ -24,8 +24,8 @@ func init() {
 		log.Println("JWT_SECRET missing in .env. Server will use empty string as secret")
 	}
 
-	if os.Getenv("REDIS_HOST") == "" {
-		log.Println("REDIS_HOST missing in .env. Server will use localhost:6379 instead")
+	if os.Getenv("REDIS_URI") == "" {
+		log.Println("REDIS_URI missing in .env. Server will use localhost:6379 instead")
 	}
 
 	if os.Getenv("REFRESH_TOKEN_TTL") == "" {
@@ -140,9 +140,9 @@ func (a *auth) ValidateGoogleToken(t string) (*jwt.Token, error) {
 		kid := a.getGooglePEM()[t.Header["kid"].(string)]
 		if kid != nil {
 			return a.getGooglePEM()[t.Header["kid"].(string)], nil
-		} else {
-			return nil, errors.New("token: kid does not exist")
 		}
+		return nil, errors.New("token: kid does not exist")
+
 	})
 }
 
@@ -155,9 +155,8 @@ func (a *auth) ValidateTwitchToken(t string) (*jwt.Token, error) {
 		kid := a.getTwitchKeys()[t.Header["kid"].(string)]
 		if kid != nil {
 			return a.getTwitchKeys()[t.Header["kid"].(string)], nil
-		} else {
-			return nil, errors.New("token: kid does not exist")
 		}
+		return nil, errors.New("token: kid does not exist")
 
 	})
 }
@@ -167,11 +166,17 @@ func ServerV1(rr *gin.RouterGroup) {
 	var s = new(server)
 	var r = new(r)
 
-	r.conn = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_HOST"),
-		Password: os.Getenv("REDIS_PASSWORD"),
-		DB:       0,
-	})
+	redisURI := os.Getenv("REDIS_URI")
+	if len(redisURI) == 0 {
+		redisURI = "redis://localhost:6379"
+	}
+
+	opts, err := redis.ParseURL(redisURI)
+	if err != nil {
+		panic(err)
+	}
+
+	r.conn = redis.NewClient(opts)
 
 	if ttl := os.Getenv("REFRESH_TOKEN_TTL"); ttl != "" {
 		r.refreshTokenTTL = os.Getenv("REFRESH_TOKEN_TTL")
