@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 
-	v1 "github.com/pogify/pogify-api"
+	v1 "github.com/pogify/pogify-api/v1"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-package pogifyapi
+package v1
 
 import (
 	"fmt"
