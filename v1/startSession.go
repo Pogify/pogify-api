@@ -2,6 +2,7 @@ package v1
 
 import (
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -74,5 +75,13 @@ func (s *server) startSession(c *gin.Context) {
 }
 
 func generateSessionCode() (string, error) {
+	// testing flag for predictable keys
+	if _testing {
+		if rand.Float32() < 0.5 {
+			return "test1", nil
+		}
+		return "test2", nil
+	}
+
 	return gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5)
 }

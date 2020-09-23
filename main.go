@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 
@@ -9,13 +11,15 @@ import (
 
 func main() {
 	s := startServer()
-	s.Run(":8081") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	s.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
 func startServer() *gin.Engine {
 	s := gin.Default()
 
-	v1.ServerV1(s.Group("/v1"))
+	if os.Getenv("V1") != "" {
+		v1.ServerV1(s.Group("/v1"))
+	}
 
 	return s
 }
