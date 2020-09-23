@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 
@@ -15,7 +17,9 @@ func main() {
 func startServer() *gin.Engine {
 	s := gin.Default()
 
-	v1.ServerV1(s.Group("/v1"))
+	if os.Getenv("V1") != "" {
+		v1.ServerV1(s.Group("/v1"))
+	}
 
 	return s
 }
