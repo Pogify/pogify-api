@@ -76,9 +76,12 @@ func (r *r) rateLimitRequest(sessionID string, id string) ([2]int64, error) {
 	bs := hashID(id)
 	key := fmt.Sprintf("requestLimit:%v:%x", sessionID, bs)
 	val, err := r.conn.Eval(ctx, requestLimitScript, []string{key}, sessionID).Result()
+
 	valS := new([2]int64)
-	for i, v := range val.([]interface{}) {
-		valS[i] = v.(int64)
+	if err == nil {
+		for i, v := range val.([]interface{}) {
+			valS[i] = v.(int64)
+		}
 	}
 
 	return *valS, err

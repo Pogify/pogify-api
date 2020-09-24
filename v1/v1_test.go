@@ -35,6 +35,15 @@ func TestMain(m *testing.M) {
 		c.String(200, "ok")
 	})
 
+	mockPubSubHandler.GET("/channels-stats", func(c *gin.Context) {
+		switch id := c.Query("id"); id {
+		case "exist":
+			c.Status(200)
+		case "notexist":
+			c.Status(404)
+		}
+	})
+
 	mockPubSubServer := httptest.NewServer(mockPubSubHandler)
 	defer mockPubSubServer.Close()
 

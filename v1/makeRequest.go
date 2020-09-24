@@ -59,8 +59,12 @@ func (s *server) makeRequest(c *gin.Context) {
 		}
 		id = token.Claims.(jwt.MapClaims)["sub"].(string)
 	default:
-		c.String(400, "invalid provider")
-		return
+		if _testing {
+			id = "test"
+		} else {
+			c.String(400, "invalid provider")
+			return
+		}
 	}
 
 	t0 := time.Now()
@@ -79,14 +83,15 @@ func (s *server) makeRequest(c *gin.Context) {
 	}
 
 	// check active session
-	res, _ := http.Get(fmt.Sprintf("%v/channels-stats?id=%v", s.pubsub.url, r.Session))
+	res, err := http.Get(fmt.Sprintf("%v/channels-stats?id=%v", s.pubsub.url, r.Session))
 	if err != nil {
 		go s.redis.reverseRateLimit(r.Session, id)
 		c.AbortWithError(500, err)
 		return
 	}
+	log.Print(res)
 	if res.StatusCode == 404 {
-		c.String(400, "inactive session")
+		c.String(404, "inactive session")
 		return
 	}
 
