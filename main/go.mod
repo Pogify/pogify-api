@@ -1,4 +1,4 @@
-module main
+module github.com/pogify/pogify-api/main
 
 go 1.15
 
