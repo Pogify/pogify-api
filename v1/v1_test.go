@@ -2,6 +2,8 @@ package v1
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +17,31 @@ var _ = (func() interface{} {
 	_testing = true
 	return nil
 })()
+
+var _pubsubsecret = "secret"
+
+func TestMain(m *testing.M) {
+	log.Print("main")
+	mockPubSubHandler := gin.New()
+
+	mockPubSubHandler.POST("/pub", func(c *gin.Context) {
+		if c.GetHeader("authorization") != _pubsubsecret {
+			c.Status(401)
+			return
+		}
+
+		body, _ := ioutil.ReadAll(c.Request.Body)
+		log.Printf("PubSub got: %x", body)
+		c.String(200, "ok")
+	})
+
+	mockPubSubServer := httptest.NewServer(mockPubSubHandler)
+	defer mockPubSubServer.Close()
+
+	os.Setenv("PUBSUB_URL", mockPubSubServer.URL)
+	code := m.Run()
+	os.Exit(code)
+}
 
 func TestServerV1(t *testing.T) {
 	os.Setenv("REFRESH_TOKEN_TTL", "100")

@@ -18,7 +18,6 @@ func (p *pubsub) pub(ch chan<- *http.Response, errCh chan<- error, channel strin
 	pub.URL.RawQuery = pubQ.Encode()
 
 	if err != nil {
-		ch <- nil
 		errCh <- err
 		return
 	}

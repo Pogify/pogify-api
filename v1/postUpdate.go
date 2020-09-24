@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,6 +19,11 @@ func (s *server) postUpdate(c *gin.Context) {
 	token, err := jwt.Parse(sessionToken, func(token *jwt.Token) (interface{}, error) {
 		return s.jwt.secret, nil
 	})
+
+	if err != nil {
+		c.String(401, err.Error())
+		return
+	}
 
 	if token.Valid {
 		sessionID := token.Claims.(jwt.MapClaims)["session"].(string)
@@ -53,9 +57,6 @@ func (s *server) postUpdate(c *gin.Context) {
 		}
 
 		c.Data(200, "application/json", body)
-	} else if ve, ok := err.(*jwt.ValidationError); ok {
-		c.Error(ve)
-		c.String(400, fmt.Sprint(ve))
 	} else {
 		c.AbortWithError(403, err)
 	}

@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	gonanoid "github.com/matoous/go-nanoid"
@@ -17,6 +19,7 @@ func (s *server) refreshSession(c *gin.Context) {
 	refreshToken := c.Query("refreshToken")
 	if refreshToken == "" {
 		c.String(400, "missing query: refreshToken")
+		return
 	}
 
 	token, err := jwt.Parse(sessionJWT, func(token *jwt.Token) (interface{}, error) {
@@ -49,7 +52,7 @@ func (s *server) refreshSession(c *gin.Context) {
 		claims := sessionJwtClaims{
 			sessionID,
 			jwt.StandardClaims{
-				ExpiresAt: 60 * 60,
+				ExpiresAt: time.Now().Add(time.Hour).Unix(),
 			},
 		}
 
@@ -65,7 +68,7 @@ func (s *server) refreshSession(c *gin.Context) {
 			"session":      sessionID,
 			"refreshToken": newRefreshToken,
 			"token":        tokenSign,
-			"expiresIn":    3000,
+			"expiresIn":    time.Hour.Seconds(),
 		})
 	}
 

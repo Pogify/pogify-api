@@ -8,7 +8,7 @@ import (
 )
 
 type config struct {
-	RequestInterval int `json:"requestInterval"`
+	RequestInterval int `json:"requestInterval" binding:"required"`
 }
 
 func (s *server) setConfig(c *gin.Context) {
