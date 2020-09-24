@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -80,7 +79,6 @@ func Test_server_startSession(t *testing.T) {
 
 		var v map[string]interface{}
 		json.Unmarshal(body, &v)
-		fmt.Printf("%+v", v)
 		if v["session"] != otherKey {
 			t.Fatalf("Incorrect key receieved. Got: %v. Expected: %v", v["session"], otherKey)
 		}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"time"
@@ -36,7 +35,7 @@ func (r *r) newSession(sessionToken string, refreshToken string) (int64, error) 
 
 	val, err := r.conn.Eval(ctx, newSessionScript, key, refreshToken, r.refreshTokenTTL).Result()
 	if err != nil {
-		log.Print(err)
+		val = int64(0)
 	}
 
 	return val.(int64), err
@@ -73,27 +72,20 @@ var requestLimitScript = `
 	end 	
 	return {c, redis.call('ttl', KEYS[1])}`
 
-func (r *r) rateLimitRequest(sessionID string, id string) ([]int64, error) {
-	hash := sha1.New()
-	hash.Write([]byte(id))
-	bs := hash.Sum(nil)
+func (r *r) rateLimitRequest(sessionID string, id string) ([2]int64, error) {
+	bs := hashID(id)
 	key := fmt.Sprintf("requestLimit:%v:%x", sessionID, bs)
-	log.Print(key)
 	val, err := r.conn.Eval(ctx, requestLimitScript, []string{key}, sessionID).Result()
-	log.Print(err)
-	valS := make([]int64, 0, 2)
-	log.Print(val)
-	for _, v := range val.([]interface{}) {
-		valS = append(valS, v.(int64))
+	valS := new([2]int64)
+	for i, v := range val.([]interface{}) {
+		valS[i] = v.(int64)
 	}
 
-	return valS, err
+	return *valS, err
 }
 
 func (r *r) reverseRateLimit(sessionID string, id string) (int64, error) {
-	hash := sha1.New()
-	hash.Write([]byte(id))
-	bs := hash.Sum(nil)
+	bs := hashID(id)
 	return r.conn.Decr(ctx, fmt.Sprintf("requestLimit:%v:%v", sessionID, bs)).Result()
 }
 
@@ -120,7 +112,6 @@ func (r *r) getSessionConfig(sessionID string) (*config, error) {
 	if len(conf) == 0 {
 		return nil, fmt.Errorf("No config for %s", sessionID)
 	}
-	fmt.Printf("%+v", conf)
 
 	c := cast(&conf)
 
@@ -145,4 +136,10 @@ func cast(conf *map[string]string) *config {
 	}
 
 	return &c
+}
+
+func hashID(id string) []byte {
+	hash := sha1.New()
+	hash.Write([]byte(id))
+	return hash.Sum(nil)
 }

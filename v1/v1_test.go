@@ -17,6 +17,8 @@ var _ = (func() interface{} {
 })()
 
 func TestServerV1(t *testing.T) {
+	os.Setenv("REFRESH_TOKEN_TTL", "100")
+
 	mr, err := miniredis.Run()
 	defer mr.Close()
 	if err != nil {
@@ -40,7 +42,7 @@ func TestServerV1(t *testing.T) {
 		{"/makeRequest", "OPTIONS"},
 		{"/setConfig", "OPTIONS"},
 		{"/getConfig", "GET"},
-		{"/twitchauth", "GET"},
+		{"/auth/twitch", "GET"},
 	}
 
 	for _, testCase := range cases {

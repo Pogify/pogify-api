@@ -77,7 +77,7 @@ func (s *server) startSession(c *gin.Context) {
 func generateSessionCode() (string, error) {
 	// testing flag for predictable keys
 	if _testing {
-		if rand.Float32() < 0.5 {
+		if rand.Float32() < 0.1 {
 			return "test1", nil
 		}
 		return "test2", nil
