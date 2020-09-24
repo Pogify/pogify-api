@@ -67,10 +67,8 @@ func (s *server) makeRequest(c *gin.Context) {
 		}
 	}
 
-	t0 := time.Now()
 	// eager increment rate limit
 	rateLimit, err := s.redis.rateLimitRequest(r.Session, id)
-	log.Print(time.Now().Sub(t0))
 
 	if err != nil {
 		c.AbortWithError(500, err)
@@ -89,7 +87,7 @@ func (s *server) makeRequest(c *gin.Context) {
 		c.AbortWithError(500, err)
 		return
 	}
-	log.Print(res)
+
 	if res.StatusCode == 404 {
 		c.String(404, "inactive session")
 		return
