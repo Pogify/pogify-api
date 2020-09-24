@@ -41,7 +41,7 @@ func Test_server_refreshSession(t *testing.T) {
 
 	router := gin.New()
 
-	ServerV1(router.Group("/"))
+	Server(router.Group("/"))
 
 	t.Run("empty call", func(t *testing.T) {
 		w := httptest.NewRecorder()

@@ -18,7 +18,7 @@ func startServer() *gin.Engine {
 	s := gin.Default()
 
 	if os.Getenv("V1") != "" {
-		v1.ServerV1(s.Group("/v1"))
+		v1.Server(s.Group("/v1"))
 	}
 
 	return s

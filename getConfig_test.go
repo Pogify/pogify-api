@@ -20,7 +20,7 @@ func Test_server_getConfig(t *testing.T) {
 
 	router := gin.New()
 
-	ServerV1(router.Group("/"))
+	Server(router.Group("/"))
 
 	t.Run("test get on missing query", func(t *testing.T) {
 		w := httptest.NewRecorder()

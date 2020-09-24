@@ -22,7 +22,7 @@ func Test_server_startSession(t *testing.T) {
 
 	router := gin.New()
 
-	ServerV1(router.Group("/"))
+	Server(router.Group("/"))
 	var key1 string
 	t.Run("Test /startSession returns 200", func(t *testing.T) {
 		w := httptest.NewRecorder()

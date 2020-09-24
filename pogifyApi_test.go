@@ -64,7 +64,7 @@ func TestServerV1(t *testing.T) {
 
 	router := gin.Default()
 
-	ServerV1(router.Group("/"))
+	Server(router.Group("/"))
 
 	cases := []struct {
 		endpoint string

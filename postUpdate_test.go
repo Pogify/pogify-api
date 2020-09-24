@@ -41,7 +41,7 @@ func Test_server_postUpdate(t *testing.T) {
 
 	router := gin.Default()
 
-	ServerV1(router.Group("/"))
+	Server(router.Group("/"))
 
 	t.Run("empty call", func(t *testing.T) {
 		w := httptest.NewRecorder()

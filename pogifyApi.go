@@ -53,8 +53,8 @@ type j struct {
 	secret []byte
 }
 
-// ServerV1 sets routes for  version 1 of api
-func ServerV1(rr *gin.RouterGroup) {
+// Server sets routes for  version 1 of api
+func Server(rr *gin.RouterGroup) {
 	var s = new(server)
 	var r = new(r)
 

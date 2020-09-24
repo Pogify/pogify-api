@@ -38,7 +38,7 @@ func Test_server_setConfig(t *testing.T) {
 
 	router := gin.New()
 
-	ServerV1(router.Group("/"))
+	Server(router.Group("/"))
 
 	t.Run("test without token", func(t *testing.T) {
 		w := httptest.NewRecorder()
