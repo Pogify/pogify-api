@@ -67,7 +67,9 @@ jobs:
               dep ensure
           fi
       - name: Inject Env
-        run: envsubst < app.yml.template > app.yml
+        run: |
+          envsubst < app.yml.template > app.yml
+          ls
 
       - id: deploy
         uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
