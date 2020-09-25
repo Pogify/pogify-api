@@ -7,7 +7,7 @@ automatic_scaling:
   max_concurrent_requests: 80
   max_pending_latency: 1s
 
-env:
+env_variables:
   V1: $V1
   JWT_SECRET: $JWT_SECRET
   REDIS_URI: $REDIS_URI
