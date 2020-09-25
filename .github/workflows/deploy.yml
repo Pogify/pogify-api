@@ -75,6 +75,7 @@ jobs:
         uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
         with:
           credentials: ${{ secrets.gcp_credentials }}
+          deliverables: app.yml
 
       - id: test
         run: curl "${{ steps.deploy.outputs.url }}"
