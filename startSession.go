@@ -30,6 +30,7 @@ func (s *server) startSession(c *gin.Context) {
 		return
 	}
 
+	retryCounter := 0
 	for true {
 		val, err := s.redis.newSession(sessionCode, refreshToken)
 
@@ -41,12 +42,16 @@ func (s *server) startSession(c *gin.Context) {
 
 		if val == 1 {
 			break
-		} else {
+		} else if retryCounter < 10 {
+			retryCounter++
 			sessionCode, err = generateSessionCode(0)
 			if err != nil {
 				c.AbortWithError(500, err)
 				return
 			}
+		} else {
+			c.String(500, "out of session ids")
+			return
 		}
 	}
 

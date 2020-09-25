@@ -82,7 +82,17 @@ func Test_server_startSession(t *testing.T) {
 		if v["session"] != otherKey {
 			t.Fatalf("Incorrect key receieved. Got: %v. Expected: %v", v["session"], otherKey)
 		}
+	})
 
+	t.Run("Test /startSession returns 500 when out of available session ids", func(t *testing.T) {
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("POST", "/startSession", nil)
+		router.ServeHTTP(w, req)
+
+		if expected := 500; w.Code != expected {
+			t.Errorf("returned %v instead of %v", w.Code, expected)
+		}
 	})
 
 }
