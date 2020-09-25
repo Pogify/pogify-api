@@ -1,4 +1,4 @@
-runtime: go115
+runtime: go114
 instance_class: F1
 
 main: ./main/main.go
