@@ -21,6 +21,7 @@ var _ = (func() interface{} {
 var _pubsubsecret = "secret"
 
 func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
 	log.Print("main")
 	mockPubSubHandler := gin.New()
 
