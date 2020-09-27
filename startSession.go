@@ -18,7 +18,7 @@ type sessionJwtClaims struct {
 
 // StartSession ...
 func (s *server) startSession(c *gin.Context) {
-	sessionCode, err := generateSessionCode()
+	sessionCode, err := generateSessionCode(0)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return
@@ -42,7 +42,7 @@ func (s *server) startSession(c *gin.Context) {
 		if val == 1 {
 			break
 		} else {
-			sessionCode, err = generateSessionCode()
+			sessionCode, err = generateSessionCode(0)
 			if err != nil {
 				c.AbortWithError(500, err)
 				return
@@ -74,7 +74,7 @@ func (s *server) startSession(c *gin.Context) {
 	})
 }
 
-func generateSessionCode() (string, error) {
+func generateSessionCode(_ int) (string, error) {
 	// testing flag for predictable keys
 	if _testing {
 		if rand.Float32() < 0.1 {

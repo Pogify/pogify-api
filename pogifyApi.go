@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-redis/redis/v8"
+	ginpow "github.com/jeongy-cho/gin-pow"
 )
 
 var _testing = false
@@ -40,6 +42,7 @@ type server struct {
 	pubsub *pubsub
 	jwt    *j
 	auth   *auth
+	pow    *ginpow.Middleware
 }
 
 func (s *server) cors(c *gin.Context) {
@@ -92,9 +95,62 @@ func Server(rr *gin.RouterGroup) {
 	go a.getTwitchKeys()
 	s.auth = a
 
+	s.pow, err = ginpow.New(&ginpow.Middleware{
+		ExtractData: func(c *gin.Context) (string, error) {
+			var j map[string]interface{}
+			c.ShouldBindBodyWith(&j, binding.JSON)
+
+			log.Printf("%#v", j)
+
+			retStr := ""
+
+			if id := j["sessionId"]; id != nil {
+				retStr += id.(string)
+			}
+			if sol := j["solution"]; sol != nil {
+				retStr += sol.(string)
+			}
+			return retStr, nil
+
+		},
+		ExtractHash: func(c *gin.Context) (hash string, error error) {
+			var j map[string]interface{}
+			c.ShouldBindBodyWith(&j, binding.JSON)
+
+			if h := j["hash"]; h != nil {
+				hash = h.(string)
+			}
+			return
+		},
+
+		ExtractNonce: func(c *gin.Context) (nonce string, nonceChecksum string, error error) {
+			var j map[string]interface{}
+			c.ShouldBindBodyWith(&j, binding.JSON)
+
+			if n := j["sessionId"]; n != nil {
+				nonce = n.(string)
+			}
+
+			if c := j["checksum"]; c != nil {
+				nonceChecksum = c.(string)
+			}
+			return
+		},
+		Check:                true,
+		Secret:               os.Getenv("POW_SECRET"),
+		Difficulty:           3,
+		NonceDataKey:         "sessionId",
+		NonceChecksumDataKey: "checksum",
+		NonceGenerator:       generateSessionCode,
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	sessionEndpoints := rr.Group("/session")
 	{
-		sessionEndpoints.POST("/start", s.startSession)
+		sessionEndpoints.GET("/problem", s.pow.NonceHandler)
+		sessionEndpoints.POST("/claim", s.pow.VerifyNonceMiddleware, s.startSession)
 
 		sessionEndpoints.POST("/refresh", s.refreshSession)
 
