@@ -2,7 +2,6 @@ package pogifyapi
 
 import (
 	"log"
-	"math/rand"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -18,6 +17,7 @@ type sessionJwtClaims struct {
 
 // StartSession ...
 func (s *server) startSession(c *gin.Context) {
+
 	sessionCode, err := generateSessionCode(0)
 	if err != nil {
 		c.AbortWithError(500, err)
@@ -77,16 +77,4 @@ func (s *server) startSession(c *gin.Context) {
 		"expiresIn":    60 * 60,
 		"token":        tokenSign,
 	})
-}
-
-func generateSessionCode(_ int) (string, error) {
-	// testing flag for predictable keys
-	if _testing {
-		if rand.Float32() < 0.1 {
-			return "test1", nil
-		}
-		return "test2", nil
-	}
-
-	return gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5)
 }

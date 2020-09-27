@@ -142,6 +142,10 @@ func Server(rr *gin.RouterGroup) {
 		NonceDataKey:         "sessionId",
 		NonceChecksumDataKey: "checksum",
 		NonceGenerator:       generateSessionCode,
+
+		NonceContextKey:          "sessionId",
+		NonceChecksumContextKey:  "checksum",
+		HashDifficultyContextKey: "hashDifficulty",
 	})
 	if err != nil {
 		panic(err)
@@ -149,7 +153,7 @@ func Server(rr *gin.RouterGroup) {
 
 	sessionEndpoints := rr.Group("/session")
 	{
-		sessionEndpoints.GET("/problem", s.pow.NonceHandler)
+		sessionEndpoints.GET("/problem", s.pow.GenerateNonceMiddleware, s.generateProblem)
 		sessionEndpoints.POST("/claim", s.pow.VerifyNonceMiddleware, s.startSession)
 
 		sessionEndpoints.POST("/refresh", s.refreshSession)
