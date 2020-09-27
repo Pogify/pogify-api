@@ -24,13 +24,13 @@ func Test_server_startSession(t *testing.T) {
 
 	Server(router.Group("/"))
 	var key1 string
-	t.Run("Test /startSession returns 200", func(t *testing.T) {
+	t.Run("Test /session/start returns 200", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/startSession", nil)
+		req, _ := http.NewRequest("POST", "/session/start", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 200 {
-			t.Fatal("/startSession didn't return 200 on normal operation")
+			t.Fatal("/session/start didn't return 200 on normal operation")
 		}
 
 		body, err := ioutil.ReadAll(w.Body)
@@ -64,7 +64,7 @@ func Test_server_startSession(t *testing.T) {
 
 	})
 
-	t.Run("Test /startSession returns 200 the other key", func(t *testing.T) {
+	t.Run("Test /session/start returns 200 the other key", func(t *testing.T) {
 		var otherKey string
 		if key1 == "test1" {
 			otherKey = "test2"
@@ -73,7 +73,7 @@ func Test_server_startSession(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/startSession", nil)
+		req, _ := http.NewRequest("POST", "/session/start", nil)
 		router.ServeHTTP(w, req)
 		body, _ := ioutil.ReadAll(w.Body)
 

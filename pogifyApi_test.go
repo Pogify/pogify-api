@@ -71,15 +71,16 @@ func TestServerV1(t *testing.T) {
 		endpoint string
 		method   string
 	}{
-		{"/startSession", "POST"},
-		{"/refreshSession", "POST"},
-		{"/postUpdate", "OPTIONS"},
-		{"/postUpdate", "POST"},
-		{"/makeRequest", "POST"},
-		{"/makeRequest", "OPTIONS"},
-		{"/setConfig", "OPTIONS"},
-		{"/getConfig", "GET"},
-		{"/auth/twitch", "GET"},
+		{"/session/start", "POST"},
+		{"/session/refresh", "POST"},
+		{"/session/update", "OPTIONS"},
+		{"/session/update", "POST"},
+		{"/session/request", "POST"},
+		{"/session/request", "OPTIONS"},
+		{"/session/config", "OPTIONS"},
+		{"/session/config", "GET"},
+		{"/session/config", "POST"},
+		{"/auth/twitch", "POST"},
 	}
 
 	for _, testCase := range cases {

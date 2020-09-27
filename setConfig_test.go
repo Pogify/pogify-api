@@ -42,7 +42,7 @@ func Test_server_setConfig(t *testing.T) {
 
 	t.Run("test without token", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/setConfig", nil)
+		req, _ := http.NewRequest("POST", "/session/config", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 400 {
@@ -54,7 +54,7 @@ func Test_server_setConfig(t *testing.T) {
 	t.Run("test with token, no body", func(t *testing.T) {
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/setConfig", nil)
+		req, _ := http.NewRequest("POST", "/session/config", nil)
 		req.Header.Add("X-Session-Token", mockToken)
 		router.ServeHTTP(w, req)
 
@@ -66,7 +66,7 @@ func Test_server_setConfig(t *testing.T) {
 	t.Run("test with invalid token", func(t *testing.T) {
 		invalidToken, _ := token.SignedString([]byte("aaaa"))
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/setConfig", nil)
+		req, _ := http.NewRequest("POST", "/session/config", nil)
 		req.Header.Add("X-Session-Token", invalidToken)
 		router.ServeHTTP(w, req)
 
@@ -80,7 +80,7 @@ func Test_server_setConfig(t *testing.T) {
 		conf := []byte("{\"requestInterval\":100}")
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/setConfig", bytes.NewReader(conf))
+		req, _ := http.NewRequest("POST", "/session/config", bytes.NewReader(conf))
 		req.Header.Add("X-Session-Token", mockToken)
 		router.ServeHTTP(w, req)
 

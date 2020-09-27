@@ -25,7 +25,7 @@ func Test_server_makeRequest(t *testing.T) {
 
 	t.Run("empty call", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/makeRequest", nil)
+		req, _ := http.NewRequest("POST", "/session/request", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 400 {
@@ -35,7 +35,7 @@ func Test_server_makeRequest(t *testing.T) {
 
 	t.Run("invalid body, inactive session", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/makeRequest", strings.NewReader("{\"invalid\":\"invalid\"}"))
+		req, _ := http.NewRequest("POST", "/session/request", strings.NewReader("{\"invalid\":\"invalid\"}"))
 		router.ServeHTTP(w, req)
 
 		if w.Code != 400 {
@@ -52,7 +52,7 @@ func Test_server_makeRequest(t *testing.T) {
 		validBodyBytes, _ := json.Marshal(validBody)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/makeRequest", bytes.NewReader(validBodyBytes))
+		req, _ := http.NewRequest("POST", "/session/request", bytes.NewReader(validBodyBytes))
 		router.ServeHTTP(w, req)
 
 		if expect := 404; w.Code != expect {
@@ -71,7 +71,7 @@ func Test_server_makeRequest(t *testing.T) {
 		validBodyBytes, _ := json.Marshal(validBody)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/makeRequest", bytes.NewReader(validBodyBytes))
+		req, _ := http.NewRequest("POST", "/session/request", bytes.NewReader(validBodyBytes))
 		router.ServeHTTP(w, req)
 
 		if expect := 200; w.Code != expect {
@@ -90,7 +90,7 @@ func Test_server_makeRequest(t *testing.T) {
 		validBodyBytes, _ := json.Marshal(validBody)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/makeRequest", bytes.NewReader(validBodyBytes))
+		req, _ := http.NewRequest("POST", "/session/request", bytes.NewReader(validBodyBytes))
 		router.ServeHTTP(w, req)
 
 		if expect := 429; w.Code != expect {

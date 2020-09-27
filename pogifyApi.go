@@ -92,14 +92,22 @@ func Server(rr *gin.RouterGroup) {
 	go a.getTwitchKeys()
 	s.auth = a
 
-	rr.POST("/startSession", s.startSession)
-	rr.POST("/refreshSession", s.refreshSession)
-	rr.OPTIONS("/postUpdate", s.cors)
-	rr.POST("/postUpdate", s.postUpdate)
-	rr.POST("/makeRequest", s.makeRequest)
-	rr.OPTIONS("/makeRequest", s.cors)
-	rr.POST("/setConfig", s.setConfig)
-	rr.OPTIONS("/setConfig", s.cors)
-	rr.GET("/getConfig", s.getConfig)
-	rr.GET("/auth/twitch", s.twitchAuth)
+	sessionEndpoints := rr.Group("/session")
+	{
+		sessionEndpoints.POST("/start", s.startSession)
+
+		sessionEndpoints.POST("/refresh", s.refreshSession)
+
+		sessionEndpoints.OPTIONS("/update", s.cors)
+		sessionEndpoints.POST("/update", s.postUpdate)
+
+		sessionEndpoints.OPTIONS("/request", s.cors)
+		sessionEndpoints.POST("/request", s.makeRequest)
+
+		sessionEndpoints.POST("/config", s.setConfig)
+		sessionEndpoints.OPTIONS("/config", s.cors)
+
+		sessionEndpoints.GET("/config", s.getConfig)
+	}
+	rr.POST("/auth/twitch", s.twitchAuth)
 }

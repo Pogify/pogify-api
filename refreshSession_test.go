@@ -45,7 +45,7 @@ func Test_server_refreshSession(t *testing.T) {
 
 	t.Run("empty call", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/refreshSession", nil)
+		req, _ := http.NewRequest("POST", "/session/refresh", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 400 {
@@ -54,7 +54,7 @@ func Test_server_refreshSession(t *testing.T) {
 	})
 	t.Run("with sessionToken without refreshToken", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/refreshSession", nil)
+		req, _ := http.NewRequest("POST", "/session/refresh", nil)
 		q := req.URL.Query()
 		q.Add("sessionToken", mockToken)
 
@@ -68,7 +68,7 @@ func Test_server_refreshSession(t *testing.T) {
 	t.Run("with invalid sessionToken, with refreshToken", func(t *testing.T) {
 		invalidToken, _ := token.SignedString([]byte("aaaa"))
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/refreshSession", nil)
+		req, _ := http.NewRequest("POST", "/session/refresh", nil)
 		q := req.URL.Query()
 		q.Add("sessionToken", invalidToken)
 		q.Add("refreshToken", "aaaaaaa")
@@ -82,7 +82,7 @@ func Test_server_refreshSession(t *testing.T) {
 	})
 	t.Run("with sessionToken, with expired refreshToken", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/refreshSession", nil)
+		req, _ := http.NewRequest("POST", "/session/refresh", nil)
 		q := req.URL.Query()
 		q.Add("sessionToken", mockToken)
 		q.Add("refreshToken", "aaaaa")
@@ -97,7 +97,7 @@ func Test_server_refreshSession(t *testing.T) {
 	t.Run("with sessionToken, with invalid refreshToken", func(t *testing.T) {
 		mr.Set("session:"+sessionCode, "abc")
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/refreshSession", nil)
+		req, _ := http.NewRequest("POST", "/session/refresh", nil)
 		q := req.URL.Query()
 		q.Add("sessionToken", mockToken)
 		q.Add("refreshToken", "aaaaa")
@@ -112,7 +112,7 @@ func Test_server_refreshSession(t *testing.T) {
 	t.Run("with sessionToken, with good refreshToken", func(t *testing.T) {
 		mr.Set("session:"+sessionCode, "abc")
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/refreshSession", nil)
+		req, _ := http.NewRequest("POST", "/session/refresh", nil)
 		q := req.URL.Query()
 		q.Add("sessionToken", mockToken)
 		q.Add("refreshToken", "abc")

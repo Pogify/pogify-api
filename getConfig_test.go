@@ -24,7 +24,7 @@ func Test_server_getConfig(t *testing.T) {
 
 	t.Run("test get on missing query", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/getConfig", nil)
+		req, _ := http.NewRequest("GET", "/session/config", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 400 {
@@ -34,7 +34,7 @@ func Test_server_getConfig(t *testing.T) {
 
 	t.Run("test get on missing config", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/getConfig?session=test", nil)
+		req, _ := http.NewRequest("GET", "/session/config?session=test", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 404 {
@@ -45,7 +45,7 @@ func Test_server_getConfig(t *testing.T) {
 	t.Run("test get on missing config", func(t *testing.T) {
 		mr.HSet("session:test:config", "RefreshInterval", "100")
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/getConfig?session=test", nil)
+		req, _ := http.NewRequest("GET", "/session/config?session=test", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 200 {

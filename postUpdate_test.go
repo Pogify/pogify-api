@@ -45,7 +45,7 @@ func Test_server_postUpdate(t *testing.T) {
 
 	t.Run("empty call", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/postUpdate", nil)
+		req, _ := http.NewRequest("POST", "/session/update", nil)
 		router.ServeHTTP(w, req)
 
 		if w.Code != 400 {
@@ -55,7 +55,7 @@ func Test_server_postUpdate(t *testing.T) {
 	t.Run("invalid token", func(t *testing.T) {
 		invalidToken, _ := token.SignedString([]byte("aaaa"))
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/postUpdate", nil)
+		req, _ := http.NewRequest("POST", "/session/update", nil)
 		req.Header.Add("X-Session-Token", invalidToken)
 		router.ServeHTTP(w, req)
 
@@ -65,7 +65,7 @@ func Test_server_postUpdate(t *testing.T) {
 	})
 	t.Run("proper token, empty body", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/postUpdate", nil)
+		req, _ := http.NewRequest("POST", "/session/update", nil)
 		req.Header.Add("x-session-token", mockToken)
 		router.ServeHTTP(w, req)
 
@@ -76,7 +76,7 @@ func Test_server_postUpdate(t *testing.T) {
 
 	t.Run("proper token, body", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("POST", "/postUpdate", strings.NewReader("{\"nothing\":\"nothing\"}"))
+		req, _ := http.NewRequest("POST", "/session/update", strings.NewReader("{\"nothing\":\"nothing\"}"))
 		req.Header.Add("x-session-token", mockToken)
 		router.ServeHTTP(w, req)
 
