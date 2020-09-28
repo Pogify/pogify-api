@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-redis/redis/v8"
 	ginpow "github.com/jeongy-cho/gin-pow"
+	gonanoid "github.com/matoous/go-nanoid"
 )
 
 var _testing = false
@@ -33,6 +36,19 @@ func init() {
 	if os.Getenv("PUBSUB_URL") == "" {
 		if !_testing {
 			panic("PUBSUB_URL missing in .env. Add it and restart the server.")
+		}
+	}
+
+	if os.Getenv("POW_SECRET") == "" {
+		log.Println("POW_SECRET missing in .env. Server will use random string as secret")
+	}
+
+	if os.Getenv("POW_DIFFICULTY") == "" {
+		log.Println("POW_DIFFICULTY missing in .env. Server will use difficulty 0")
+
+	} else {
+		if _, err := strconv.Atoi(os.Getenv("POW_DIFFICULTY")); err != nil {
+			log.Println("Can't parse POW_DIFFICULTY to int, server will use difficulty 0")
 		}
 	}
 }
@@ -95,55 +111,17 @@ func Server(rr *gin.RouterGroup) {
 	go a.getTwitchKeys()
 	s.auth = a
 
+	powDiff, _ := strconv.Atoi(os.Getenv("POW_DIFFICULTY"))
+
 	s.pow, err = ginpow.New(&ginpow.Middleware{
-		ExtractData: func(c *gin.Context) (string, error) {
-			var j map[string]interface{}
-			c.ShouldBindBodyWith(&j, binding.JSON)
+		ExtractAll: extractAll,
+		Check:      true,
+		Secret:     os.Getenv("POW_SECRET"),
+		Difficulty: powDiff,
 
-			log.Printf("%#v", j)
+		NonceGenerator: generateSessionCode,
 
-			retStr := ""
-
-			if id := j["sessionId"]; id != nil {
-				retStr += id.(string)
-			}
-			if sol := j["solution"]; sol != nil {
-				retStr += sol.(string)
-			}
-			return retStr, nil
-
-		},
-		ExtractHash: func(c *gin.Context) (hash string, error error) {
-			var j map[string]interface{}
-			c.ShouldBindBodyWith(&j, binding.JSON)
-
-			if h := j["hash"]; h != nil {
-				hash = h.(string)
-			}
-			return
-		},
-
-		ExtractNonce: func(c *gin.Context) (nonce string, nonceChecksum string, error error) {
-			var j map[string]interface{}
-			c.ShouldBindBodyWith(&j, binding.JSON)
-
-			if n := j["sessionId"]; n != nil {
-				nonce = n.(string)
-			}
-
-			if c := j["checksum"]; c != nil {
-				nonceChecksum = c.(string)
-			}
-			return
-		},
-		Check:                true,
-		Secret:               os.Getenv("POW_SECRET"),
-		Difficulty:           3,
-		NonceDataKey:         "sessionId",
-		NonceChecksumDataKey: "checksum",
-		NonceGenerator:       generateSessionCode,
-
-		NonceContextKey:          "sessionId",
+		NonceContextKey:          "nonce",
 		NonceChecksumContextKey:  "checksum",
 		HashDifficultyContextKey: "hashDifficulty",
 	})
@@ -153,9 +131,12 @@ func Server(rr *gin.RouterGroup) {
 
 	sessionEndpoints := rr.Group("/session")
 	{
-		sessionEndpoints.GET("/problem", s.pow.GenerateNonceMiddleware, s.generateProblem)
-		sessionEndpoints.POST("/claim", s.pow.VerifyNonceMiddleware, s.startSession)
+		sessionEndpoints.GET("/issue", s.pow.GenerateNonceMiddleware, s.GenerateProblem)
 
+		sessionEndpoints.OPTIONS("/claim", s.cors)
+		sessionEndpoints.POST("/claim", s.pow.VerifyNonceMiddleware, s.claimSession)
+
+		sessionEndpoints.OPTIONS("/refresh", s.cors)
 		sessionEndpoints.POST("/refresh", s.refreshSession)
 
 		sessionEndpoints.OPTIONS("/update", s.cors)
@@ -164,10 +145,74 @@ func Server(rr *gin.RouterGroup) {
 		sessionEndpoints.OPTIONS("/request", s.cors)
 		sessionEndpoints.POST("/request", s.makeRequest)
 
-		sessionEndpoints.POST("/config", s.setConfig)
 		sessionEndpoints.OPTIONS("/config", s.cors)
-
 		sessionEndpoints.GET("/config", s.getConfig)
+		sessionEndpoints.POST("/config", s.setConfig)
 	}
 	rr.POST("/auth/twitch", s.twitchAuth)
+}
+
+func generateSessionCode(_ int) (string, error) {
+	// testing flag for predictable keys
+	if _testing {
+		return "test1.123", nil
+	}
+
+	if nonce, err := gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5); err != nil {
+		return "", err
+	} else {
+		return fmt.Sprintf("%v.%v", nonce, time.Now().Unix()), nil
+	}
+}
+
+type Time time.Time
+
+// MarshalJSON is used to convert the timestamp to JSON
+func (t Time) MarshalJSON() ([]byte, error) {
+	return []byte(strconv.FormatInt(time.Time(t).Unix(), 10)), nil
+}
+
+// UnmarshalJSON is used to convert the timestamp from JSON
+func (t *Time) UnmarshalJSON(s []byte) (err error) {
+	r := string(s)
+	q, err := strconv.ParseInt(r, 10, 64)
+	if err != nil {
+		return err
+	}
+	*(*time.Time)(t) = time.Unix(q, 0)
+	return nil
+}
+
+type SessionClaim struct {
+	SessionID string `json:"sessionId" binding:"required"`
+	Issued    Time   `json:"issued" binding:"required"`
+	Checksum  string `json:"checksum" binding:"required"`
+	Solution  string `json:"solution" binding:"required"`
+	Hash      string `json:"hash" binding:"required"`
+}
+
+func extractAll(c *gin.Context) (nonce string, nonceChecksum string, data string, hash string, err error) {
+	b := new(SessionClaim)
+
+	if err = c.ShouldBindBodyWith(b, binding.JSON); err != nil {
+		c.Error(err)
+		c.String(400, err.Error())
+		c.Abort()
+		return
+	}
+	c.Set("sessionID", b.SessionID)
+
+	if dif := time.Since(time.Time(b.Issued)); dif > time.Minute {
+		err = fmt.Errorf("problem expired by %v", dif)
+		c.Error(err)
+		c.String(400, err.Error())
+		c.Abort()
+		return
+	}
+
+	nonce = fmt.Sprintf("%v.%v", b.SessionID, strconv.FormatInt(time.Time(b.Issued).Unix(), 10))
+	nonceChecksum = b.Checksum
+	data = b.Solution
+	hash = b.Hash
+	return
 }

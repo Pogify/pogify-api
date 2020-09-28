@@ -1,6 +1,7 @@
 package pogifyapi
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -16,12 +17,15 @@ type sessionJwtClaims struct {
 }
 
 // StartSession ...
-func (s *server) startSession(c *gin.Context) {
+func (s *server) claimSession(c *gin.Context) {
 
-	sessionCode, err := generateSessionCode(0)
-	if err != nil {
-		c.AbortWithError(500, err)
+	var sessionCode string
+	if s, exists := c.Get("sessionID"); !exists {
+		c.AbortWithError(500, errors.New("sessionID not set in context"))
 		return
+	} else {
+		log.Print(s)
+		sessionCode = s.(string)
 	}
 
 	refreshToken, err := gonanoid.ID(64)
@@ -30,29 +34,17 @@ func (s *server) startSession(c *gin.Context) {
 		return
 	}
 
-	retryCounter := 0
-	for true {
-		val, err := s.redis.newSession(sessionCode, refreshToken)
+	val, err := s.redis.newSession(sessionCode, refreshToken)
 
-		if err != nil {
-			log.Print(err)
-			c.AbortWithError(500, err)
-			return
-		}
+	if err != nil {
+		log.Print(err)
+		c.AbortWithError(500, err)
+		return
+	}
 
-		if val == 1 {
-			break
-		} else if retryCounter < 10 {
-			retryCounter++
-			sessionCode, err = generateSessionCode(0)
-			if err != nil {
-				c.AbortWithError(500, err)
-				return
-			}
-		} else {
-			c.String(500, "out of session ids")
-			return
-		}
+	if val != 1 {
+		c.String(410, "code taken")
+		return
 	}
 
 	claims := sessionJwtClaims{

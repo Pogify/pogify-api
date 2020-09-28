@@ -1,34 +1,38 @@
 package pogifyapi
 
 import (
-	"math/rand"
-	"time"
+	"errors"
+	"strconv"
+	"strings"
 
-	"github.com/gin-gonic/gin"	gonanoid "github.com/matoous/go-nanoid"
+	"github.com/gin-gonic/gin"
 )
 
+func (s *server) GenerateProblem(c *gin.Context) {
+	nonce, nErr := c.Get("nonce")
+	if !nErr {
+		c.AbortWithError(500, errors.New("no nonce"))
+		return
+	}
 
-func (s *server) generateProblem(c *gin.Context) {
-	sessionId, _ := c.Get("sessionId")
-	checksum, _ := c.Get("checksum")
-	
+	checksum, ncErr := c.Get("checksum")
+	if !ncErr {
+		c.AbortWithError(500, errors.New("no nonce checksum"))
+		return
+	}
+
+	splitNonce := strings.Split(nonce.(string), ".")
+	issued, _ := strconv.Atoi(splitNonce[1])
+
 	d := gin.H{
-		"sessionId": sessionId,
-		"checksum": checksum,
-		"issued": time.Now().Unix(),
-
-	}
-}
-
-
-func generateSessionCode(_ int) (string, error) {
-	// testing flag for predictable keys
-	if _testing {
-		if rand.Float32() < 0.1 {
-			return "test1", nil
-		}
-		return "test2", nil
+		"sessionId":  splitNonce[0],
+		"checksum":   checksum,
+		"issued":     issued,
+		"difficulty": s.pow.Difficulty,
 	}
 
-	if nonce, err :=	gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5); err != nonce {}
+	c.Negotiate(200, gin.Negotiate{
+		Offered: []string{gin.MIMEJSON, gin.MIMEXML},
+		Data:    d,
+	})
 }
