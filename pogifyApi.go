@@ -72,7 +72,7 @@ type j struct {
 	secret []byte
 }
 
-// Server sets routes for  version 1 of api
+// Server sets routes for api
 func Server(rr *gin.RouterGroup) {
 	var s = new(server)
 	var r = new(r)
@@ -158,13 +158,14 @@ func generateSessionCode(_ int) (string, error) {
 		return "test1.123", nil
 	}
 
-	if nonce, err := gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5); err != nil {
+	nonce, err := gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5)
+	if err != nil {
 		return "", err
-	} else {
-		return fmt.Sprintf("%v.%v", nonce, time.Now().Unix()), nil
 	}
+	return fmt.Sprintf("%v.%v", nonce, time.Now().Unix()), nil
 }
 
+// Time is a JSON un/marshallable type of time.Time
 type Time time.Time
 
 // MarshalJSON is used to convert the timestamp to JSON
@@ -181,14 +182,6 @@ func (t *Time) UnmarshalJSON(s []byte) (err error) {
 	}
 	*(*time.Time)(t) = time.Unix(q, 0)
 	return nil
-}
-
-type SessionClaim struct {
-	SessionID string `json:"sessionId" binding:"required"`
-	Issued    Time   `json:"issued" binding:"required"`
-	Checksum  string `json:"checksum" binding:"required"`
-	Solution  string `json:"solution" binding:"required"`
-	Hash      string `json:"hash" binding:"required"`
 }
 
 func extractAll(c *gin.Context) (nonce string, nonceChecksum string, data string, hash string, err error) {

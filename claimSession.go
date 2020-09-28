@@ -20,13 +20,12 @@ type sessionJwtClaims struct {
 func (s *server) claimSession(c *gin.Context) {
 
 	var sessionCode string
-	if s, exists := c.Get("sessionID"); !exists {
+	sid, exists := c.Get("sessionID")
+	if !exists {
 		c.AbortWithError(500, errors.New("sessionID not set in context"))
 		return
-	} else {
-		log.Print(s)
-		sessionCode = s.(string)
 	}
+	sessionCode = sid.(string)
 
 	refreshToken, err := gonanoid.ID(64)
 	if err != nil {
