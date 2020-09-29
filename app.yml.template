@@ -6,7 +6,7 @@ main: ./main/main.go
 automatic_scaling:
   max_concurrent_requests: 80
   max_pending_latency: 1s
-  max_instance_count: 2
+  max_instances: 2
 
 env_variables:
   V1: $V1
