@@ -12,7 +12,8 @@ on:
         description: "Test scenario tags"
 
 env:
-  V1: $V1
+  V1: yes
+  V2: yes
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
   REDIS_URI: ${{ secrets.REDIS_URI }}
   PUBSUB_SECRET: ${{ secrets.PUBSUB_SECRET }}

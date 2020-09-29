@@ -6,12 +6,15 @@ main: ./main/main.go
 automatic_scaling:
   max_concurrent_requests: 80
   max_pending_latency: 1s
+  max_instance_count: 2
 
 env_variables:
   V1: $V1
+  V2: $V2
   JWT_SECRET: $JWT_SECRET
   REDIS_URI: $REDIS_URI
   PUBSUB_SECRET: $PUBSUB_SECRET
   PUBSUB_URL: $PUBSUB_URL
   TWITCH_CLIENT_ID: $TWITCH_CLIENT_ID
   TWITCH_CLIENT_SECRET: $TWITCH_CLIENT_SECRET
+  REFRESH_TOKEN_TTL: $REFRESH_TOKEN_TTL
