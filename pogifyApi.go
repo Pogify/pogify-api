@@ -152,17 +152,17 @@ func Server(rr *gin.RouterGroup) {
 	rr.POST("/auth/twitch", s.twitchAuth)
 }
 
-func generateSessionCode(_ int) (string, error) {
+func generateSessionCode(_ int) ([]byte, error) {
 	// testing flag for predictable keys
 	if _testing {
-		return "test1.123", nil
+		return []byte("test1.123"), nil
 	}
 
 	nonce, err := gonanoid.Generate("abcdefghijklmnopqrstuwxyz0123456789-", 5)
 	if err != nil {
-		return "", err
+		return []byte(""), err
 	}
-	return fmt.Sprintf("%v.%v", nonce, time.Now().Unix()), nil
+	return []byte(fmt.Sprintf("%v.%v", nonce, time.Now().Unix())), nil
 }
 
 // Time is a JSON un/marshallable type of time.Time

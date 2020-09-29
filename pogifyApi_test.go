@@ -218,7 +218,7 @@ func Test_generateSessionCode(t *testing.T) {
 		panic(err)
 	}
 
-	split := strings.Split(nonce, ".")
+	split := strings.Split(string(nonce), ".")
 
 	if expect := 5; len(split[0]) != expect {
 		t.Errorf("different session id length: %v, expected %v", len(split[0]), expect)

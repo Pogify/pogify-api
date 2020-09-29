@@ -29,7 +29,7 @@ func Test_server_GenerateProblem(t *testing.T) {
 			Secret:                  "secret",
 			NonceChecksumContextKey: "checksum",
 			ExtractData:             func(c *gin.Context) (string, error) { return "", nil },
-			NonceGenerator:          func(i int) (string, error) { return "test1.123", nil },
+			NonceGenerator:          func(i int) ([]byte, error) { return []byte("test1.123"), nil },
 		})
 
 		if err != nil {
@@ -82,7 +82,7 @@ func Test_server_GenerateProblem(t *testing.T) {
 		m, err := ginpow.New(&ginpow.Middleware{
 			NonceChecksumContextKey: "checksum",
 			ExtractData:             func(c *gin.Context) (string, error) { return "", nil },
-			NonceGenerator:          func(i int) (string, error) { return "test1.123", nil },
+			NonceGenerator:          func(i int) ([]byte, error) { return []byte("test1.123"), nil },
 		})
 
 		if err != nil {

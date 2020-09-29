@@ -71,8 +71,14 @@ github.com/jeongy-cho/gin-pow v0.4.0 h1:MU3o32qCbvUlRymKk/iiARYRNEzVi796aPR7APrv
 github.com/jeongy-cho/gin-pow v0.4.0/go.mod h1:6+lYmwfWI8e2DuIkKZ+Sse3rWTGCFn01PTIwuMOyTmI=
 github.com/jeongy-cho/gin-pow v0.4.1 h1:Vr47ysnCFfeqNmOzY2CfptQM8D31GSHTOBkt0bqv6LM=
 github.com/jeongy-cho/gin-pow v0.4.1/go.mod h1:6+lYmwfWI8e2DuIkKZ+Sse3rWTGCFn01PTIwuMOyTmI=
+github.com/jeongy-cho/gin-pow v0.5.0 h1:HGAUAH5GF9jK1YxInU+0PkItfnYusq2Pt9zdEC6o8qc=
+github.com/jeongy-cho/gin-pow v0.5.0/go.mod h1:qY9MVa+Fi1BC5y42N/Ol8esYvpg8mblZCy87+ukMNxg=
 github.com/jeongy-cho/go-pow v1.2.1 h1:z4vJ5M+pjN/tb7b+IeZ4QeXJ7AQDps1mKJmLIHvslpg=
 github.com/jeongy-cho/go-pow v1.2.1/go.mod h1:LK4l4W/AvtVIgbOGGyc7t3NiGhsczT9AgEvhKQqXDRQ=
+github.com/jeongy-cho/go-pow v1.3.0 h1:JHABXDWobK/e558kWo1t3ULVbuKXfsYE8+n6IqzA8Zg=
+github.com/jeongy-cho/go-pow v1.3.0/go.mod h1:LK4l4W/AvtVIgbOGGyc7t3NiGhsczT9AgEvhKQqXDRQ=
+github.com/jeongy-cho/go-pow/v2 v2.0.1 h1:tmvh5oWgVUQDOgLRaeoBTp4uXjrEkZrbj9mcJaYVxRU=
+github.com/jeongy-cho/go-pow/v2 v2.0.1/go.mod h1:q1MZX95Jwp9tGo7Gwe3SFpSoTJKzwqZuMD0kVfCc/X8=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
 github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGns=
