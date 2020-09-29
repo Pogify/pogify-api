@@ -7,6 +7,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	v1 "github.com/pogify/pogify-api"
+	v2 "github.com/pogify/pogify-api/v2"
 )
 
 func main() {
@@ -19,6 +20,10 @@ func startServer() *gin.Engine {
 
 	if os.Getenv("V1") != "" {
 		v1.Server(s.Group("/v1"))
+	}
+
+	if os.Getenv("V2") != "" {
+		v2.Server(s.Group("/v2"))
 	}
 
 	return s
