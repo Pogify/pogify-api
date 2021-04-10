@@ -74,7 +74,7 @@ jobs:
           ls
 
       - id: deploy
-        uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
+        uses: google-github-actions/deploy-appengine@main
         with:
           credentials: ${{ secrets.gcp_credentials }}
           deliverables: app.yml
