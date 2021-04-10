@@ -132,17 +132,21 @@ func Server(rr *gin.RouterGroup) {
 	sessionEndpoints := rr.Group("/session")
 	{
 		sessionEndpoints.Use(s.cors)
-
 		sessionEndpoints.GET("/issue", s.pow.GenerateNonceMiddleware, s.GenerateProblem)
 
+		sessionEndpoints.OPTIONS("/claim", s.cors)
 		sessionEndpoints.POST("/claim", s.pow.VerifyNonceMiddleware, s.claimSession)
 
+		sessionEndpoints.OPTIONS("/refresh", s.cors)
 		sessionEndpoints.POST("/refresh", s.refreshSession)
 
+		sessionEndpoints.OPTIONS("/update", s.cors)
 		sessionEndpoints.POST("/update", s.postUpdate)
 
+		sessionEndpoints.OPTIONS("/request", s.cors)
 		sessionEndpoints.POST("/request", s.makeRequest)
 
+		sessionEndpoints.OPTIONS("/config", s.cors)
 		sessionEndpoints.GET("/config", s.getConfig)
 		sessionEndpoints.POST("/config", s.setConfig)
 	}
